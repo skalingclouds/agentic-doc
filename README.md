@@ -46,13 +46,12 @@ result_paths = parse_and_save_documents(file_paths, result_save_dir)
 
 ## Configuration Options
 
-The library uses a `Settings` object to manage configuration. You can customize these settings either through environment variables or by modifying the settings object directly:
+The library uses a [`Settings` object](./agentic_doc/config.py) to manage configuration. You can customize these settings either through environment variables:
 
-
-### Parallel Processing Configuration
 
 ```bash
-export MAX_WORKERS=4 # Number of worker threads for parallel processing, defaults to 4
+export MAX_WORKERS=4 # Number of worker threads for parallel processing, defaults to 10
+export MAX_RETRIES=100 # Maximum number of retry attempts for failed requests, defaults to 100
 ```
 
 ## API Reference
@@ -103,10 +102,10 @@ Parse a single document and optionally save results.
 Represents a parsed document with the following attributes:
 
 - `markdown`: str - Markdown representation of the document
-- `chunks`: list[Chunk] - List of parsed content chunks
-- `doc_type`: str - Type of document ("pdf" or "image")
+- `chunks`: list[Chunk] - List of parsed content chunks, sorted by page index, then the layout of the content in the page
 - `start_page_idx`: Optional[int] - Starting page index for PDFs
 - `end_page_idx`: Optional[int] - Ending page index for PDFs
+- `doc_type`: Literal["pdf", "image"] - Type of document
 
 #### Chunk
 
@@ -114,14 +113,15 @@ Represents a parsed content chunk with the following attributes:
 
 - `text`: str - Extracted text content
 - `grounding`: list[Grounding] - List of content locations in document
-- `error`: Optional[str] - Error message if parsing failed
+- `chunk_type`: Literal["text", "error"] - Type of chunk
+- `chunk_id`: Optional[str] - ID of the chunk
 
 ## Error Handling
 
 The library implements a robust retry mechanism for handling API failures:
 
 - Retries are performed for HTTP status codes: 408, 429, 502, 503, 504
-- Exponential backoff with jitter is used for retry delays
-- Initial retry delay is 1 second, increasing exponentially
-- Maximum retry delay is 300 seconds
+- Exponential backoff with jitter is used for retry wait time
+- Initial retry wait time is 1 second, increasing exponentially
+- Maximum retry wait time is 300 seconds
 - Jitter of 5 seconds is added to prevent thundering herd

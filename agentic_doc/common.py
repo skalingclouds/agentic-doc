@@ -95,39 +95,3 @@ class Timer:
 
     def __exit__(self, *args):
         self.elapsed = time.perf_counter() - self.start
-
-
-# class RateLimiter:
-#     """
-#     A rate limiter that implements a token bucket algorithm.
-#     It has a maximum number of tokens available for concurrent tasks.
-#     Workers acquire tokens to process tasks and release them when done.
-#     """
-
-#     def __init__(self, max_tokens: int, retry_interval_sec: float = 5):
-#         self.max_tokens = max_tokens
-#         self.available_tokens = max_tokens
-#         self.retry_interval = retry_interval_sec
-#         self.lock = threading.Lock()
-
-#     def acquire(self):
-#         """
-#         Acquires a token. If no tokens are available, waits and retries periodically.
-#         Returns when a token is successfully acquired.
-#         """
-#         while True:
-#             with self.lock:
-#                 if self.available_tokens > 0:
-#                     self.available_tokens -= 1
-#                     return
-#             # No tokens available, wait and retry
-#             time.sleep(self.retry_interval)
-
-#     def release(self):
-#         """
-#         Releases a token back to the pool.
-#         Should be called when a worker completes or fails its task.
-#         """
-#         with self.lock:
-#             if self.available_tokens < self.max_tokens:
-#                 self.available_tokens += 1
