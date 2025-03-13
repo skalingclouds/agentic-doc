@@ -46,7 +46,7 @@ result_paths = parse_and_save_documents(file_paths, result_save_dir)
 
 ## Configuration Options
 
-The library uses a [`Settings` object](./agentic_doc/config.py) to manage configuration. You can customize these settings either through environment variables:
+The library uses a [`Settings` object](./agentic_doc/config.py) to manage configuration. You can customize these settings either through environment variables or a `.env` file:
 
 
 ```bash
