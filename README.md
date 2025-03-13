@@ -115,7 +115,7 @@ NOTE: you can find out your REST API latency from logs, and reach out to us if y
 This setting controls how the library logs the retry attempts.
 
 - `log_msg`: Log the retry attempts as a log messages. Each attempt is logged as a separate message.
-- `inline_blobk`: Print a yellow progress block ('█') on the same line. Each block represents one retry attempt. Choose this if you want to see the verbose retry logging and still want to keep an eye on the number of retries has been made.
+- `inline_blobk`: Print a yellow progress block ('█') on the same line. Each block represents one retry attempt. Choose this if you don't want to see the verbose retry logging message and still want to keep an eye on the number of retries has been made.
 - `none`: Do not log the retry attempts.
 
 
