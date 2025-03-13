@@ -7,7 +7,7 @@ A Python library that wraps around [VisionAgent document extraction REST API](ht
 ### Installation
 
 ```bash
-pip install agentic-doc
+pip install git+https://github.com/landing-ai/agentic-doc.git
 ```
 
 ### Prerequisites
