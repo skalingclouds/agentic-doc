@@ -6,6 +6,7 @@ from pypdf import PdfReader, PdfWriter
 from tenacity import RetryCallState
 
 from agentic_doc.common import Document
+from agentic_doc.config import settings
 
 _LOGGER = structlog.getLogger(__name__)
 
@@ -64,15 +65,22 @@ def split_pdf(
 
 def log_retry_failure(retry_state: RetryCallState) -> None:
     if retry_state.outcome and retry_state.outcome.failed:
-        # exception = retry_state.outcome.exception()
-        # func_name = retry_state.fn.__name__ if retry_state.fn else "unknown_function"
-        # TODO: add a link to the error FAQ page
-        # _LOGGER.debug(
-        #     f"'{func_name}' failed on attempt {retry_state.attempt_number}. Error: '{exception}'.",
-        # )
-        # Print yellow progress block that updates on the same line
-        print(
-            f"\r\033[33m{'█' * retry_state.attempt_number}\033[0m",
-            end="",
-            flush=True,
-        )
+        match settings.retry_logging_style:
+            case "log_msg":
+                exception = retry_state.outcome.exception()
+                func_name = (
+                    retry_state.fn.__name__ if retry_state.fn else "unknown_function"
+                )
+                # TODO: add a link to the error FAQ page
+                _LOGGER.debug(
+                    f"'{func_name}' failed on attempt {retry_state.attempt_number}. Error: '{exception}'.",
+                )
+            case "inline_block":
+                # Print yellow progress block that updates on the same line
+                print(
+                    f"\r\033[33m{'█' * retry_state.attempt_number}\033[0m",
+                    end="",
+                    flush=True,
+                )
+            case "none":
+                pass

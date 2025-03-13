@@ -184,10 +184,11 @@ def _parse_doc_parts(doc: Document) -> ParsedDocument:
 
 
 @tenacity.retry(
-    wait=tenacity.wait_exponential_jitter(exp_base=1.5, initial=1, max=300, jitter=5),
+    wait=tenacity.wait_exponential_jitter(
+        exp_base=1.5, initial=1, max=settings.max_retry_wait_time, jitter=10
+    ),
     stop=tenacity.stop_after_attempt(settings.max_retries),
     retry=tenacity.retry_if_exception_type(RetryableError),
-    # before_sleep=tenacity.before_sleep_log(_LOGGER, logging.INFO),
     after=log_retry_failure,
 )
 def _send_parsing_request(file_path: str) -> dict[str, Any]:

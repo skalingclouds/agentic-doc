@@ -1,6 +1,6 @@
 # agentic-doc
 
-A Python library that wraps around [VisionAgent document extraction REST API](https://va.landing.ai/demo/doc-extraction) to make documents extraction easy.
+A Python library that wraps around [VisionAgent agentic document extraction REST API](https://va.landing.ai/demo/doc-extraction) to make documents extraction easy.
 
 ## Quick Start
 
@@ -38,21 +38,86 @@ print(parsed_doc.chunks)  # Get structured chunks of content
 ```python
 from agentic_doc.parse import parse_and_save_documents
 
-file_paths = ["path/to/your/document.pdf", "path/to/another/document.pdf"]
+file_paths = ["path/to/your/document1.pdf", "path/to/another/document2.pdf"]
 result_save_dir = "path/to/save/results"
 
 result_paths = parse_and_save_documents(file_paths, result_save_dir)
+# result_paths: ["path/to/save/results/document1_20250313_070305.json", "path/to/save/results/document2_20250313_070408.json"]
 ```
+
+
+## Main Features
+
+With this library, you can do things that are otherwise hard to do with the REST API alone.
+Below are some of the highlighted features.
+
+### Parse a large PDF file (e.g. 500 pages)
+
+A single REST API call can only handle up to 2 pages at a time. This library will automatically split a large file into multiple calls, using a thread pool to process the calls in parallel, and stitching the results back together as a single result.
+
+
+### Parse multiple documents in a batch
+
+You can parse multiple documents in a single function call with this library. The library will process those documents in parallel.
+
+
+### Automatically handle API errors and rate limits with retries
+
+The REST API endpoint imposes rate limits per API key. This library automatically handles the rate limit error or other intermittent HTTP errors with retries.
+
+See [Error Handling](#error-handling) and [Configuration Options](#configuration-options) for more details.
+
+
+### File type and size support
+
+PDF and common image files are supported.
+The library should be able to process a single PDF file of 1000+ pages.
+
+NOTE: if anything is not working, please let us know by opening an issue or a PR.
+
+
+### Error Handling
+
+The library implements a retry mechanism for handling API failures:
+
+- Retries are performed for HTTP status codes: 408, 429, 502, 503, 504
+- Exponential backoff with jitter is used for retry wait time
+- Initial retry wait time is 1 second, increasing exponentially
+- Retry will stop after `max_retries` attempts. Exceeding the limit will raise an exception and result in a failure for this request.
+- Retry wait time is capped at `max_retry_wait_time` seconds
+- Jitter of 10 seconds is added to prevent thundering herd
+
 
 ## Configuration Options
 
 The library uses a [`Settings` object](./agentic_doc/config.py) to manage configuration. You can customize these settings either through environment variables or a `.env` file:
 
+Below is an example `.env` file:
 
 ```bash
-export MAX_WORKERS=4 # Number of worker threads for parallel processing, defaults to 10
-export MAX_RETRIES=100 # Maximum number of retry attempts for failed requests, defaults to 100
+MAX_WORKERS=4 # Number of worker threads for parallel processing for each file, defaults to 10
+MAX_RETRIES=80 # Maximum number of retry attempts for failed intermittent requests, defaults to 100
+MAX_RETRY_WAIT_TIME=30 # Maximum wait time in seconds for each retry, defaults to 60
+RETRY_LOGGING_STYLE=log_msg # Logging style for retry, defaults to log_msg
 ```
+
+### Setting `MAX_WORKERS`
+
+Increasing `MAX_WORKERS` will increase the number of concurrent requests, which can speed up the processing of large files if you have a enough API rate limit. Otherwise, you hit the rate limit error and the library just keeps retrying for you.
+
+The best `MAX_WORKERS` value depends on your API rate limit and the latency of each REST API call. For example, if your account has a rate limit of 5 requests per minute, and each REST API call takes on average 60 seconds to complete, then `MAX_WORKERS` should be set to 5.
+
+NOTE: you can find out your REST API latency from logs, and reach out to us if you want to increase your rate limit.
+
+
+### Setting `RETRY_LOGGING_STYLE`
+
+This setting controls how the library logs the retry attempts.
+
+- `log_msg`: Log the retry attempts as a log messages. Each attempt is logged as a separate message.
+- `inline_blobk`: Print a yellow progress block ('█') on the same line. Each block represents one retry attempt. Choose this if you want to see the verbose retry logging and still want to keep an eye on the number of retries has been made.
+- `none`: Do not log the retry attempts.
+
 
 ## API Reference
 
@@ -95,7 +160,7 @@ Parse a single document and optionally save results.
   - `FileNotFoundError`: If input file doesn't exist
   - `ValueError`: If file type is not supported
 
-### Data Classes
+### Result Schema
 
 #### ParsedDocument
 
@@ -115,13 +180,3 @@ Represents a parsed content chunk with the following attributes:
 - `grounding`: list[Grounding] - List of content locations in document
 - `chunk_type`: Literal["text", "error"] - Type of chunk
 - `chunk_id`: Optional[str] - ID of the chunk
-
-## Error Handling
-
-The library implements a robust retry mechanism for handling API failures:
-
-- Retries are performed for HTTP status codes: 408, 429, 502, 503, 504
-- Exponential backoff with jitter is used for retry wait time
-- Initial retry wait time is 1 second, increasing exponentially
-- Maximum retry wait time is 300 seconds
-- Jitter of 5 seconds is added to prevent thundering herd
