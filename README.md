@@ -1,8 +1,6 @@
-<div align="center">
 [![](https://dcbadge.vercel.app/api/server/wPdN8RCYew?compact=true&style=flat)](https://discord.gg/wPdN8RCYew)
 ![ci_status](https://github.com/landing-ai/agentic-doc/actions/workflows/ci_cd.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/agentic-doc.svg)](https://badge.fury.io/py/agentic-doc)
-</div>
 
 
 # agentic-doc
