@@ -1,11 +1,17 @@
+import json
 from typing import Literal
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+import structlog
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_LOGGER = structlog.get_logger(__name__)
 
 
 class Settings(BaseSettings):
     vision_agent_api_key: str = Field()
-    max_workers: int = Field(default=10)
+    batch_size: int = Field(default=4)
+    max_workers: int = Field(default=5)
     max_retries: int = Field(default=100)
     max_retry_wait_time: int = Field(default=60)
     retry_logging_style: Literal["none", "log_msg", "inline_blobk"] = Field(
@@ -18,5 +24,15 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    def __str__(self):
+        # Create a copy of dict with redacted API key
+        settings_dict = self.model_dump()
+        if "vision_agent_api_key" in settings_dict:
+            settings_dict["vision_agent_api_key"] = (
+                settings_dict["vision_agent_api_key"][:5] + "[REDACTED]"
+            )
+        return f"{json.dumps(settings_dict, indent=2)}"
+
 
 settings = Settings()
+_LOGGER.info(f"Settings loaded: {settings}")
