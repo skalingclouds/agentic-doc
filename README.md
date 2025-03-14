@@ -41,7 +41,7 @@ from agentic_doc.parse import parse_and_save_documents
 file_paths = ["path/to/your/document1.pdf", "path/to/another/document2.pdf"]
 result_save_dir = "path/to/save/results"
 
-result_paths = parse_and_save_documents(file_paths, result_save_dir)
+result_paths = parse_and_save_documents(file_paths, result_save_dir=result_save_dir)
 # result_paths: ["path/to/save/results/document1_20250313_070305.json", "path/to/save/results/document2_20250313_070408.json"]
 ```
 
