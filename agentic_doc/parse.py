@@ -4,7 +4,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Union, cast
 
 import httpx
 import structlog
@@ -25,7 +25,7 @@ _LOGGER = structlog.getLogger(__name__)
 _ENDPOINT_URL = "https://api.va.landing.ai/v1/tools/agentic-document-analysis"
 
 
-def parse_documents(file_paths: list[str | Path]) -> list[ParsedDocument]:
+def parse_documents(file_paths: list[Union[str, Path]]) -> list[ParsedDocument]:
     """
     Parse a list of documents using the Landing AI Agentic Document Analysis API.
 
@@ -43,7 +43,10 @@ def parse_documents(file_paths: list[str | Path]) -> list[ParsedDocument]:
     with ThreadPoolExecutor(max_workers=settings.batch_size) as executor:
         return list(
             tqdm(
-                executor.map(parse_and_save_document, file_paths),
+                executor.map(
+                    parse_and_save_document,  # type: ignore [arg-type]
+                    file_paths,
+                ),
                 total=len(file_paths),
                 desc="Parsing documents",
             )
@@ -51,7 +54,7 @@ def parse_documents(file_paths: list[str | Path]) -> list[ParsedDocument]:
 
 
 def parse_and_save_documents(
-    file_paths: list[str | Path], *, result_save_dir: str | Path
+    file_paths: list[Union[str, Path]], *, result_save_dir: Union[str, Path]
 ) -> list[Path]:
     """
     Parse a list of documents and save the results to a local directory.
@@ -72,7 +75,7 @@ def parse_and_save_documents(
     with ThreadPoolExecutor(max_workers=settings.batch_size) as executor:
         return list(
             tqdm(
-                executor.map(_parse_func, file_paths),
+                executor.map(_parse_func, file_paths),  # type: ignore [arg-type]
                 total=len(file_paths),
                 desc="Parsing documents",
             )
@@ -80,10 +83,10 @@ def parse_and_save_documents(
 
 
 def parse_and_save_document(
-    file_path: str | Path,
+    file_path: Union[str, Path],
     *,
-    result_save_dir: str | Path = None,
-) -> Path | ParsedDocument:
+    result_save_dir: Union[str, Path, None] = None,
+) -> Union[Path, ParsedDocument]:
     """
     Parse a document and save the results to a local directory.
 
@@ -96,23 +99,23 @@ def parse_and_save_document(
     """
     file_path = Path(file_path)
     file_type = "pdf" if file_path.suffix.lower() == ".pdf" else "image"
-    match file_type:
-        case "image":
-            result_raw = _send_parsing_request(file_path)
-            result_raw = {
-                **result_raw["data"],
-                "doc_type": "image",
-                "start_page_idx": None,
-                "end_page_idx": None,
-            }
-            result = ParsedDocument.model_validate(result_raw)
-        case "pdf":
-            with tempfile.TemporaryDirectory() as temp_dir:
-                parts = split_pdf(file_path, temp_dir)
-                part_results = _parse_doc_in_parallel(parts, doc_name=file_path.name)
-                result = _merge_part_results(part_results)
-        case _:
-            raise ValueError(f"Unsupported file type: {file_type}")
+
+    if file_type == "image":
+        result_raw = _send_parsing_request(str(file_path))
+        result_raw = {
+            **result_raw["data"],
+            "doc_type": "image",
+            "start_page_idx": 0,
+            "end_page_idx": 0,
+        }
+        result = ParsedDocument.model_validate(result_raw)
+    elif file_type == "pdf":
+        with tempfile.TemporaryDirectory() as temp_dir:
+            parts = split_pdf(file_path, temp_dir)
+            part_results = _parse_doc_in_parallel(parts, doc_name=file_path.name)
+            result = _merge_part_results(part_results)
+    else:
+        raise ValueError(f"Unsupported file type: {file_type}")
 
     if not result_save_dir:
         return result
@@ -135,8 +138,8 @@ def _merge_part_results(results: list[ParsedDocument]) -> ParsedDocument:
         return ParsedDocument(
             markdown="",
             chunks=[],
-            start_page_idx=None,
-            end_page_idx=None,
+            start_page_idx=0,
+            end_page_idx=0,
             doc_type="pdf",
         )
 
@@ -238,5 +241,5 @@ def _send_parsing_request(file_path: str) -> dict[str, Any]:
     _LOGGER.info(
         f"Time taken to successfully parse a document chunk: {timer.elapsed:.2f} seconds"
     )
-    result = response.json()
+    result = cast(dict[str, Any], response.json())
     return result
