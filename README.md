@@ -15,7 +15,7 @@ pip install git+https://github.com/landing-ai/agentic-doc.git
 ```
 
 ### Requirements
-- Python version 3.9, 3.10, or 3.11
+- Python version 3.9, 3.10, 3.11 or 3.12
 - LandingAI agentic AI API key (get the key [here](https://va.landing.ai/account/api-key))
 
 ### Set the API Key as an Environment Variable
