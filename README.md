@@ -99,6 +99,12 @@ This library implements a retry mechanism for handling API failures:
 - Retry wait time is capped at `max_retry_wait_time` seconds.
 - Retries include a random jitter of up to 10 seconds to distribute requests and prevent the thundering herd problem.
 
+### Parsing Errors
+
+If the REST API encounters an unrecoverable error during parsing, the library includes an [error chunk](./agentic_doc/common.py#L45) in the final result for the affected page.
+Each error chunk contains the error message and corresponding page index.
+Error chunks can be identified in the `ParsedDocument` by checking for `chunk_type=ChunkType.error`.
+
 
 ## Configuration Options
 
@@ -107,11 +113,16 @@ The library uses a [`Settings`](./agentic_doc/config.py) object to manage config
 Below is an example `.env` file that customizes the configurations:
 
 ```bash
-BATCH_SIZE=4 # Number of files to process in parallel, defaults to 4
-MAX_WORKERS=2 # Number of threads used to process parts of each file in parallel, defaults to 5.
-MAX_RETRIES=80 # Maximum number of retry attempts for failed intermittent requests, defaults to 100
-MAX_RETRY_WAIT_TIME=30 # Maximum wait time in seconds for each retry, defaults to 60
-RETRY_LOGGING_STYLE=log_msg # Logging style for retry, defaults to log_msg
+# Number of files to process in parallel, defaults to 4
+BATCH_SIZE=4
+# Number of threads used to process parts of each file in parallel, defaults to 5.
+MAX_WORKERS=2
+# Maximum number of retry attempts for failed intermittent requests, defaults to 100
+MAX_RETRIES=80
+# Maximum wait time in seconds for each retry, defaults to 60
+MAX_RETRY_WAIT_TIME=30
+# Logging style for retry, defaults to log_msg
+RETRY_LOGGING_STYLE=log_msg
 ```
 
 ### Set `MAX_WORKERS`
