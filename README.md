@@ -33,7 +33,7 @@ export VISION_AGENT_API_KEY=<your-api-key>
 ### Supported Files
 The library can extract data from:
 - PDFs (any length)
-- Images that are supported by OpenCV (the `agentic-doc` library imports the `cv2` library)
+- Images that are supported by OpenCV-Python (i.e. the `cv2` library)
 
 ### Basic Usage
 
