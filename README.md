@@ -111,7 +111,7 @@ This section describes some of the key features this library offers.
 
 ### Parse Large PDF Files
 
-**A single REST API call can only handle up to 2 pages at a time.** This library automatically splits a large PDF into multiple calls, uses a thread pool to process the calls in parallel, and stitches the results back together as a single result.
+**A single REST API call can only handle up to certain amount of pages at a time** (see [rate limits](https://docs.landing.ai/ade/ade-rate-limits#maximum-pages-per-document)). This library automatically splits a large PDF into multiple calls, uses a thread pool to process the calls in parallel, and stitches the results back together as a single result.
 
 We've used this library to successfully parse PDFs that are 1000+ pages long.
 
