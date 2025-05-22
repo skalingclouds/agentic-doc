@@ -132,9 +132,13 @@ def parse_and_save_document(
             try:
                 download_file(document, str(output_file_path))
             except Exception as e:
-                _LOGGER.error(f"Failed to download file from URL: {document} due to: {e}")
-                raise RuntimeError(f"Could not download file from URL: {document}") from e
-            
+                _LOGGER.error(
+                    f"Failed to download file from URL: {document} due to: {e}"
+                )
+                raise RuntimeError(
+                    f"Could not download file from URL: {document}"
+                ) from e
+
             document = output_file_path
         else:
             document = Path(document)
