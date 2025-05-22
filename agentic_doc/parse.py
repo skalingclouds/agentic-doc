@@ -373,7 +373,9 @@ def _send_parsing_request(
                 timeout=None,
             )
             if response.status_code == 401:
-                raise RuntimeError("Invalid API key")
+                raise RuntimeError(
+                    "Please confirm that the API key is generated and set correctly"
+                )
             if response.status_code in [408, 429, 502, 503, 504]:
                 raise RetryableError(response)
 
