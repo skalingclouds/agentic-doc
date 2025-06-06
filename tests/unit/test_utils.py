@@ -40,6 +40,64 @@ from agentic_doc.utils import (
 )
 
 
+import base64
+import re
+import requests
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from unittest.mock import patch, MagicMock
+import pytest
+
+from agentic_doc.utils import check_endpoint_and_api_key
+from agentic_doc.config import settings
+
+
+@pytest.mark.parametrize(
+    "api_key_str, mock_response_status, side_effect, expected_exception, expected_msg",
+    [
+        # No API key
+        ("", None, None, ValueError, "API key is not set"),
+
+        # Endpoint down
+        (base64.b64encode(b"user:pass").decode(), None, RequestsConnectionError("mocked connection error"), ValueError, "endpoint URL"),
+
+        # 404 Not Found
+        (base64.b64encode(b"user:pass").decode(), 404, None, ValueError, "API key is not valid for this endpoint"),
+
+        # 401 Unauthorized
+        (base64.b64encode(b"user:pass").decode(), 401, None, ValueError, "API key is invalid"),
+    ],
+)
+def test_check_endpoint_and_api_key_failures(api_key_str, mock_response_status, side_effect, expected_exception, expected_msg):
+    with patch("agentic_doc.utils.settings") as mock_settings:
+        mock_settings.vision_agent_api_key = api_key_str
+
+        if side_effect is not None:
+            mock_requests_get = MagicMock(side_effect=side_effect)
+        else:
+            mock_resp = MagicMock()
+            mock_resp.status_code = mock_response_status
+            mock_requests_get = MagicMock(return_value=mock_resp)
+
+        with patch("agentic_doc.utils.requests.get", mock_requests_get):
+            with pytest.raises(expected_exception) as exc_info:
+                check_endpoint_and_api_key("https://example123.com")
+
+            assert expected_msg in str(exc_info.value)
+
+
+def test_check_endpoint_and_api_key_success():
+    valid_api_key = base64.b64encode(b"user:pass").decode()
+
+    with patch("agentic_doc.utils.settings") as mock_settings:
+        mock_settings.vision_agent_api_key = valid_api_key
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {}
+
+        with patch("agentic_doc.utils.requests.get", return_value=mock_resp):
+            check_endpoint_and_api_key("https://example.com")
+
+
 def test_download_file_with_url(results_dir):
     url = "https://pdfobject.com/pdf/sample.pdf"
     output_file_path = Path(results_dir) / "sample.pdf"

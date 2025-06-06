@@ -69,12 +69,12 @@ from agentic_doc.parse import parse
 
 # Parse a local file
 result = parse("path/to/image.png")
-print(result.markdown)  # Get the extracted data as markdown
-print(result.chunks)  # Get the extracted data as structured chunks of content
+print(result[0].markdown)  # Get the extracted data as markdown
+print(result[0].chunks)  # Get the extracted data as structured chunks of content
 
 # Parse a document from a URL
 result = parse("https://example.com/document.pdf")
-print(result.markdown)
+print(result[0].markdown)
 
 # Legacy approach (still supported)
 from agentic_doc.parse import parse_documents
@@ -95,7 +95,10 @@ for result in results:
     print(result.markdown)
 
 # Parse and save results to a directory
-result_paths = parse(file_paths, result_save_dir="path/to/save/results")
+results = parse(file_paths, result_save_dir="path/to/save/results")
+result_paths = []
+for result in results:
+    result_paths.append(result.result_path)
 # result_paths: ["path/to/save/results/document1_20250313_070305.json", ...]
 ```
 
@@ -180,6 +183,31 @@ config = URLConnectorConfig(
 # Parse document from URL
 results = parse(config, connector_path="https://example.com/document.pdf")
 ```
+
+##### Raw Bytes Input
+
+```python
+from agentic_doc.parse import parse
+
+# Load a PDF or image file as bytes
+with open("document.pdf", "rb") as f:
+    raw_bytes = f.read()
+
+# Parse the document from bytes
+results = parse(raw_bytes)
+```
+
+You can also parse image bytes:
+
+```python
+with open("image.png", "rb") as f:
+    image_bytes = f.read()
+
+results = parse(image_bytes)
+```
+
+This is useful when documents are already loaded into memory (e.g., from an API response or uploaded via a web interface). The parser will auto-detect the file type from the bytes.
+
 
 ## Why Use It?
 

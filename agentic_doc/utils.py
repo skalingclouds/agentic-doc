@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Literal, Union
 from urllib.parse import urlparse
+import requests
 
 import cv2
 import httpx
@@ -19,6 +20,28 @@ from agentic_doc.common import Chunk, ChunkGroundingBox, Document, ParsedDocumen
 from agentic_doc.config import VisualizationConfig, settings
 
 _LOGGER = structlog.getLogger(__name__)
+
+
+def check_endpoint_and_api_key(endpoint_url: str) -> None:
+    """Check if the API key is valid and if the endpoint is up."""
+    api_key = settings.vision_agent_api_key
+
+    if not api_key:
+        raise ValueError("API key is not set. Please provide a valid API key.")
+
+    headers = {"Authorization": f"Basic {api_key}"}
+
+    try:
+        response = requests.get(endpoint_url, headers=headers, timeout=5)
+    except requests.exceptions.ConnectionError:
+        raise ValueError(f'The endpoint URL "{endpoint_url}" is down or invalid.')
+
+    if response.status_code == 404:
+        raise ValueError("API key is not valid for this endpoint.")
+    elif response.status_code == 401:
+        raise ValueError("API key is invalid")
+
+    _LOGGER.info("API key is valid.")
 
 
 def get_file_type(file_path: Path) -> Literal["pdf", "image"]:

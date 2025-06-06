@@ -36,6 +36,11 @@ from agentic_doc.parse import (
     parse_documents,
 )
 
+@pytest.fixture(autouse=True)
+def patch_check_api_key():
+    with patch("agentic_doc.parse.check_endpoint_and_api_key"):
+        yield
+
 def test_parse_and_save_documents_empty_list(results_dir):
     # Act
     result_paths = parse_and_save_documents([], result_save_dir=results_dir)
@@ -883,6 +888,25 @@ class TestParseFunctionConsolidated:
 
             mock_parse.assert_called_once_with(
                 test_file,
+                include_marginalia=False,
+                include_metadata_in_markdown=False,
+                grounding_save_dir=None,
+            )
+
+    def test_parse_with_bytes(
+        self, mock_parsed_document
+    ):
+        """Test parsing with bytes."""
+        with patch(
+            "agentic_doc.parse.parse_and_save_document",
+            return_value=mock_parsed_document,
+        ) as mock_parse:
+            result = parse(
+                b"%PDF-1.7\n", include_marginalia=False, include_metadata_in_markdown=False
+            )
+
+            mock_parse.assert_called_once_with(
+                ANY,
                 include_marginalia=False,
                 include_metadata_in_markdown=False,
                 grounding_save_dir=None,
