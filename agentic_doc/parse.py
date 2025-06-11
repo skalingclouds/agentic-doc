@@ -456,7 +456,7 @@ def _parse_image(
             and "extracted_schema" in result_raw
             and result_raw["extracted_schema"]
         ):
-            result_raw["extracted_schema"] = extraction_model.model_validate(
+            result_raw["extraction"] = extraction_model.model_validate(
                 result_raw["extracted_schema"]
             )
 
@@ -478,7 +478,7 @@ def _parse_image(
             markdown="",
             chunks=[],
             extraction_metadata=None,
-            extracted_schema=None,
+            extraction=None,
             start_page_idx=0,
             end_page_idx=0,
             doc_type="image",
@@ -496,7 +496,7 @@ def _merge_part_results(results: list[ParsedDocument[T]]) -> ParsedDocument[T]:
             markdown="",
             chunks=[],
             extraction_metadata=None,
-            extracted_schema=None,
+            extraction=None,
             start_page_idx=0,
             end_page_idx=0,
             doc_type="pdf",
@@ -574,7 +574,7 @@ def _parse_doc_parts(
             and "extracted_schema" in result_data
             and result_data["extracted_schema"]
         ):
-            result_data["extracted_schema"] = extraction_model.model_validate(
+            result_data["extraction"] = extraction_model.model_validate(
                 result_data["extracted_schema"]
             )
 
@@ -601,7 +601,7 @@ def _parse_doc_parts(
             markdown="",
             chunks=[],
             extraction_metadata=None,
-            extracted_schema=None,
+            extraction=None,
             start_page_idx=doc.start_page_idx,
             end_page_idx=doc.end_page_idx,
             doc_type="pdf",
