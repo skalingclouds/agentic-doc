@@ -84,7 +84,10 @@ def create_metadata_model(model: type[BaseModel]) -> type[BaseModel]:
                     metadata_type = create_metadata_model(non_none_type)
                     fields[name] = (Optional[metadata_type], Field(default=None))
                 else:
-                    fields[name] = (Optional[Dict[str, List[str]]], Field(default=None))
+                    fields[name] = (
+                        Optional[Dict[str, Union[List[str], float]]],
+                        Field(default=None),
+                    )
                 continue
 
         # Handle nesting in lists
@@ -99,7 +102,7 @@ def create_metadata_model(model: type[BaseModel]) -> type[BaseModel]:
             else:
                 # For List[primitive], each element should be dict[str, list[str]]
                 fields[name] = (
-                    List[Dict[str, List[str]]],
+                    List[Dict[str, Union[List[str], float]]],
                     Field(default_factory=lambda: []),
                 )
             continue
@@ -108,7 +111,10 @@ def create_metadata_model(model: type[BaseModel]) -> type[BaseModel]:
         if inspect.isclass(field_type) and issubclass(field_type, BaseModel):
             fields[name] = (create_metadata_model(field_type), Field())
         else:
-            fields[name] = (Dict[str, List[str]], Field(default_factory=lambda: {}))
+            fields[name] = (
+                Dict[str, Union[List[str], float]],
+                Field(default_factory=lambda: {}),
+            )
 
     return create_model(f"{model.__name__}Metadata", **fields)
 
