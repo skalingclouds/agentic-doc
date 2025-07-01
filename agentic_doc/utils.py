@@ -2,7 +2,7 @@ import math
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal, Union, Optional
 from urllib.parse import urlparse
 
 import cv2
@@ -32,7 +32,7 @@ def check_endpoint_and_api_key(endpoint_url: str) -> None:
     headers = {"Authorization": f"Basic {api_key}"}
 
     try:
-        response = requests.get(endpoint_url, headers=headers, timeout=5)
+        response = requests.head(endpoint_url, headers=headers, timeout=5)
     except requests.exceptions.ConnectionError:
         raise ValueError(f'The endpoint URL "{endpoint_url}" is down or invalid.')
 
@@ -122,6 +122,10 @@ def page_to_image(
         img = img[..., :3]
 
     return img
+
+
+def get_chunk_from_reference(chunk_id: str, chunks: list[dict]) -> Optional[dict]:
+    return next((chunk for chunk in chunks if chunk.get("chunk_id") == chunk_id), None)
 
 
 def _crop_groundings(
