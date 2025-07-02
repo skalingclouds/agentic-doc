@@ -44,7 +44,7 @@ pip install agentic-doc
 
 ### Requirements
 - Python version 3.9, 3.10, 3.11 or 3.12
-- LandingAI agentic AI API key (get the key [here](https://va.landing.ai/account/api-key))
+- LandingAI agentic AI API key (get the key [here](https://va.landing.ai/settings/api-key))
 
 ### Set the API Key as an Environment Variable
 After you get the LandingAI agentic AI API key, set the key as an environment variable (or put it in a `.env` file):
@@ -117,7 +117,8 @@ class ExtractedFields(BaseModel):
 
 results = parse("mydoc.pdf", extraction_model=ExtractedFields)
 fields = results[0].extraction
-print(fields.employee_name)
+metadata = results[0].extraction_metadata
+print(f"Field value: {fields.employee_name}, confidence: {metadata.employee_name.confidence}")
 ```
 
 

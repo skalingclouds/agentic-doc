@@ -1627,3 +1627,58 @@ class TestParseFunctionConsolidated:
                 extraction_model=None,
                 extraction_schema=None,
             )
+
+    def test_parse_additional_extraction_metadata(
+        self, sample_image_path, mock_parsed_document
+    ):
+        """Test parsing with additional extraction metadata returned from the API"""
+        class PersonInfo(BaseModel):
+            name: str = Field(description="Person's name")
+            age: int = Field(description="Person's age")
+
+        with patch("agentic_doc.parse._send_parsing_request") as mock_request:
+            mock_request.return_value = {
+                "data": {
+                    "markdown": "# Test Document\nName: John Doe\nAge: 30",
+                    "chunks": [
+                        {
+                            "text": "Name: John Doe",
+                            "grounding": [
+                                {
+                                    "page": 0,
+                                    "box": {"l": 0.1, "t": 0.1, "r": 0.9, "b": 0.2},
+                                }
+                            ],
+                            "chunk_type": "text",
+                            "chunk_id": "1",
+                        }
+                    ],
+                    "extracted_schema": {"name": "John Doe", "age": 30},
+                    "extraction_metadata": {
+                        "name": {"chunk_references": ["id1"], "confidence": 0.6, "bounding_box": [0.1, 0.4, 0.03, 0.25]},
+                        "age": {"chunk_references": ["id2"], "confidence": 0.2, "bounding_box": [0.01, 0.09, 0.23, 1.0]},
+                    },
+                },
+                "errors": [],
+            }
+
+            result = parse(sample_image_path, extraction_model=PersonInfo)
+
+            # Verify extraction is correctly typed
+            assert isinstance(result[0].extraction, PersonInfo)
+            assert result[0].extraction.name == "John Doe"
+            assert result[0].extraction.age == 30
+
+            # Verify extraction_metadata is correctly typed
+            metadata = result[0].extraction_metadata
+            assert metadata is not None
+
+            # Check that metadata fields are dict[str, list[str]]
+            assert isinstance(metadata.name, MetadataType)
+            assert isinstance(metadata.age, MetadataType)
+
+            # Check specific metadata values
+            assert metadata.name.chunk_references == ["id1"]
+            assert metadata.age.chunk_references == ["id2"]
+
+
