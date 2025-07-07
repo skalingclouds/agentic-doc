@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import Literal
+import warnings
 
 import cv2
 import structlog
@@ -18,6 +19,35 @@ _COLOR_MAP = {
     ChunkType.figure: (50, 205, 50),  # Lime green for figures
     ChunkType.text: (255, 0, 0),  # Blue for regular text
 }
+
+
+class SettingsOverrides:
+    """
+    Compatibility class to allow setting values directly on agentic_doc.config.settings.
+    This is a temporary solution to avoid breaking changes in the API.
+    In the future, users should call parse(..., settings=Settings(api_key='xxx')) instead.
+    """
+    def __init__(self):
+        self._overrides = {}
+
+    def __setattr__(self, name, value):
+        warnings.warn(
+            (
+                "Setting values directly on agentic_doc.config.settings will be "
+                "deprecated in a future release. Please, call "
+                "parse(..., settings=Settings(api_key='xxx')) instead."
+            ),
+            DeprecationWarning
+        )
+        self._overrides[name] = value
+
+    def __getattr__(self, name):
+        if name in self._overrides:
+            return self._overrides[name]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    def __iter__(self):
+        return iter(self._overrides.items())
 
 
 class Settings(BaseSettings):
@@ -86,7 +116,26 @@ class Settings(BaseSettings):
         return f"{json.dumps(settings_dict, indent=2)}"
 
 
-settings = Settings()
+# Global settings instance to hold overrides
+# This is a temporary solution to avoid breaking changes in the API, since there
+# are users doing `agentic_doc.config.settings.vision_agent_api_key = 'xxx'` today.
+# The internal code should use `get_settings()` to retrieve the default settings instance,
+# and end users should call `parse(..., settings=Settings(api_key='xxx'))` to override
+# the global "env-vars-based" settings.
+settings = SettingsOverrides()
+
+
+def get_settings() -> Settings:
+    """
+    Get the settings instance, applying any overrides set on the settings global object.
+    """
+    settings = Settings()
+    for k, v in settings:
+        if k in settings and v is not None:
+            setattr(settings, k, v)
+    return settings
+
+
 _LOGGER.info(f"Settings loaded: {settings}")
 
 if settings.batch_size * settings.max_workers > _MAX_PARALLEL_TASKS:
