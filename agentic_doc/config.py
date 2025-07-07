@@ -133,7 +133,7 @@ def get_settings() -> Settings:
     new_settings = Settings()
     for k, v in settings:
         setattr(new_settings, k, v)
-    return settings
+    return new_settings
 
 
 _LOGGER.info(f"Settings loaded: {settings}")
