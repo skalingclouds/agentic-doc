@@ -129,7 +129,6 @@ def get_settings() -> Settings:
     """
     Get the settings instance, applying any overrides set on the settings global object.
     """
-    global settings
     new_settings = Settings()
     for k, v in settings:
         setattr(new_settings, k, v)
