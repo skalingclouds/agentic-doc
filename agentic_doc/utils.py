@@ -17,15 +17,13 @@ from pypdf import PdfReader, PdfWriter
 from tenacity import RetryCallState
 
 from agentic_doc.common import Chunk, ChunkGroundingBox, Document, ParsedDocument
-from agentic_doc.config import VisualizationConfig, settings
+from agentic_doc.config import VisualizationConfig, get_settings
 
 _LOGGER = structlog.getLogger(__name__)
 
 
-def check_endpoint_and_api_key(endpoint_url: str) -> None:
+def check_endpoint_and_api_key(endpoint_url: str, api_key: str) -> None:
     """Check if the API key is valid and if the endpoint is up."""
-    api_key = settings.vision_agent_api_key
-
     if not api_key:
         raise ValueError("API key is not set. Please provide a valid API key.")
 
@@ -108,7 +106,7 @@ def save_groundings_as_images(
 
 
 def page_to_image(
-    pdf_doc: pymupdf.Document, page_idx: int, dpi: int = settings.pdf_to_image_dpi
+    pdf_doc: pymupdf.Document, page_idx: int, dpi: int = get_settings().pdf_to_image_dpi
 ) -> np.ndarray:
     """Convert a PDF page to an image. We specifically use pymupdf because it is self-contained and correctly renders annotations."""
     page = pdf_doc[page_idx]
@@ -247,6 +245,7 @@ def split_pdf(
 
 
 def log_retry_failure(retry_state: RetryCallState) -> None:
+    settings = get_settings()
     if retry_state.outcome and retry_state.outcome.failed:
         if settings.retry_logging_style == "log_msg":
             exception = retry_state.outcome.exception()
