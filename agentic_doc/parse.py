@@ -503,21 +503,11 @@ def _parse_pdf(
     with tempfile.TemporaryDirectory() as temp_dir:
         # Determine split size based on extraction schema and split_on_schema flag
         if extraction_model or extraction_schema is not None:
-            total_pages = 0
-            with open(file_path, "rb") as file:
-                reader = PdfReader(file)
-                total_pages = len(reader.pages)
             split_size = (
                 config.extraction_split_size
                 if config and config.extraction_split_size
                 else settings.extraction_split_size
             )
-            if total_pages > split_size:
-                raise ValueError(
-                    f"Document has {total_pages} pages, which exceeds the maximum of {settings.extraction_split_size} pages "
-                    "allowed when using field extraction. "
-                    f"Please use a document with {split_size} pages or fewer."
-                )
         else:
             split_size = (
                 config.split_size
@@ -674,20 +664,18 @@ def _merge_extractions(merged_result: ParsedDocument[T], all_results: list[Parse
 
     if extractions:
         # Merge extractions into a dict of lists
-        merged_extraction: dict[str, Any] = {}
+        merged_extraction: dict[str, list[Any]] = {"merged": []}
         for extraction in extractions:
             if isinstance(extraction, dict):
-                for k, v in extraction.items():
-                    merged_extraction.setdefault(k, []).append(v)
+                merged_extraction["merged"].append(extraction)
         merged_result.extraction = merged_extraction
 
     if extraction_metadata:
         # Merge extraction_metadata into a dict of lists
-        merged_metadata: dict[str, Any] = {}
+        merged_metadata: dict[str, list[Any]] = {"merged": []}
         for metadata in extraction_metadata:
             if isinstance(metadata, dict):
-                for k, v in metadata.items():
-                    merged_metadata.setdefault(k, []).append(v)
+                merged_metadata["merged"].append(metadata)
         merged_result.extraction_metadata = merged_metadata
     if extraction_errors:
         merged_result.extraction_error = "; ".join(str(e) for e in extraction_errors if e)
