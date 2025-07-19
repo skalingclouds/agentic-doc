@@ -127,14 +127,21 @@ with tabs[1]:
 with tabs[2]:
     st.header("Review Queue")
     if st.session_state.review_queue:
-        current = st.session_state.review_queue[0]
+        st.subheader(f"Documents in Queue: {len(st.session_state.review_queue)}")
+        
+        # Document selector
+        doc_names = [doc['name'] for doc in st.session_state.review_queue]
+        selected_doc_name = st.selectbox("Select document to review:", doc_names)
+        selected_index = doc_names.index(selected_doc_name)
+        current = st.session_state.review_queue[selected_index]
+        
         with st.container():
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("PDF Preview")
                 images = convert_from_bytes(current['file_bytes'])
                 for img in images:
-                    st.image(img, width=400)
+                    st.image(img, use_column_width=True)
             
             with col2:
                 st.subheader("Extracted Data Table")
@@ -158,9 +165,9 @@ with tabs[2]:
                     st.info('No schema applied yet. Build and apply a schema to extract fields into table.')
                     st.write(current['parsed'].markdown)
         
-        notes = st.text_area("Review Notes")
-        action = st.selectbox("Action", ["Approve", "Reject", "Flag"])
-        if st.button("Submit Review"):
+        notes = st.text_area("Review Notes", key=f"notes_{selected_index}")
+        action = st.selectbox("Action", ["Approve", "Reject", "Flag"], key=f"action_{selected_index}")
+        if st.button("Submit Review", key=f"submit_{selected_index}"):
             category = action + "ed"
             doc_data = {
                 'name': current['name'],
@@ -168,8 +175,9 @@ with tabs[2]:
                 'notes': notes
             }
             st.session_state.processed_docs[category].append(doc_data)
-            st.session_state.review_queue.pop(0)
+            st.session_state.review_queue.pop(selected_index)
             st.success(f"Document {category}")
+            st.rerun()
     else:
         st.info("No documents in queue")
 
