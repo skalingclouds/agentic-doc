@@ -176,3 +176,9 @@ cython_debug/
 .qodo
 
 temp_test_data/
+/.claude
+/.claude.backup-2025-08-01T07-09-15
+/.claude.backup-2025-08-01T07-08-56
+*.backup-2025-08-01T07-09-15
+*.backup-2025-08-01T07-08-56
+*.json

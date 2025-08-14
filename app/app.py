@@ -3,7 +3,7 @@ import pandas as pd
 from agentic_doc.parse import parse
 from pydantic import create_model, BaseModel, Field
 from typing import Dict, Any, List
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 from pdf2image import convert_from_bytes
 from io import BytesIO
 import os
